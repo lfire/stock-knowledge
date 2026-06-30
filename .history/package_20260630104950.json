@@ -1,0 +1,23 @@
+{
+  "name": "stock-knowledge",
+  "version": "1.0.0",
+  "description": "股票知识博客 —— 一个面向投资者的股票入门与进阶知识站点",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "keywords": [
+    "股票",
+    "投资",
+    "财经",
+    "knowledge",
+    "blog",
+    "vitepress"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

@@ -1,0 +1,21 @@
+# 依赖
+node_modules/
+package-lock.json
+
+# VitePress 构建产物与缓存
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+.kuai.yaml
