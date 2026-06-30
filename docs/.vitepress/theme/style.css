@@ -12,6 +12,45 @@
 
   /* 链接、强调色 */
   --vp-c-brand-text: #ffffff;
+
+  /* 布局宽度：加大整体页面与文档正文宽度 */
+  --vp-layout-max-width: 1680px;
+}
+
+/* 防止整体页面出现横向滚动条（仅在 body 级生效，表格内部仍可滚动） */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* ============ 加大文档正文（中间内容区域）宽度 ============ */
+/* 文档页（带侧边栏）内容容器：默认 688px，扩大到 960px */
+@media (min-width: 960px) {
+  .VPDoc:not(.has-sidebar) .container {
+    max-width: 1100px !important;
+  }
+
+  .VPDoc:not(.has-sidebar) .content {
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPDoc.has-aside .content-container {
+    max-width: 1024px !important;
+  }
+}
+
+/* 当无右侧 aside 时（多数文章页），把正文容器拉宽 */
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar:not(.has-aside) .container {
+    max-width: 1280px !important;
+  }
+
+  .VPDoc.has-sidebar:not(.has-aside) .content {
+    max-width: 100% !important;
+    padding-right: 32px !important;
+  }
 }
 
 .dark {
@@ -180,29 +219,75 @@
   border-radius: 8px;
 }
 
-/* ============ 文章表格：占满宽度 + 列宽优化 ============ */
-/* 默认：表格占满正文宽度，列宽按内容自适应（适用于表头不同的表格） */
+/* ============ 文章表格：表格内横向滚动 + 表头/数字不折断 ============ */
+/*
+ * 关键点：
+ * 1. 用 block + overflow-x:auto 让表格在自身区域内出现横向滚动条，
+ *    避免横向溢出影响整体页面布局；
+ * 2. 表头（th）以及非最后一列的单元格默认不换行，保证表头内容、
+ *    日期、价格、涨跌幅、成交量等数字型内容不被折断；
+ * 3. 最后一列（通常为"形态要点 / 说明"等中文长文本）允许换行，
+ *    避免内容过长导致滚动距离过大。
+ */
+.vp-doc div[class*='table-wrapper'],
 .vp-doc table {
-  display: table;
+  /* 让表格在自身区域出现横向滚动条 */
+  display: block;
   width: 100%;
-  table-layout: auto;
+  max-width: 100%;
+  overflow-x: auto;
   margin: 18px 0;
+  /* 优化滚动体验 */
+  -webkit-overflow-scrolling: touch;
 }
 
-.vp-doc th,
+.vp-doc table {
+  /* 不强制铺满，按内容计算最小宽度，超出则触发滚动 */
+  border-collapse: collapse;
+}
+
+/* 表头：始终单行显示，避免折断 */
+.vp-doc th {
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* 单元格默认不换行（保护数字 / 日期 / 涨跌幅等不被折断） */
 .vp-doc td {
-  /* 中文 / 长内容自动换行，避免撑破布局 */
+  white-space: nowrap;
+}
+
+/* 最后一列（通常为"形态要点 / 说明 / 操作含义"等长文本）允许换行 */
+.vp-doc td:last-child {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 240px;
+}
+
+/* 显式标记为换行列 / 不换行列时的可控类 */
+.vp-doc td.wrap,
+.vp-doc th.wrap {
+  white-space: normal;
   word-break: break-word;
 }
 
-/* 表头为相同项的网格表（如形态目录）：各列等宽 */
+.vp-doc td.nowrap,
+.vp-doc th.nowrap {
+  white-space: nowrap;
+}
+
+/* 表头为相同项的网格表（如形态目录）：各列等宽且允许换行 */
 .vp-doc .cols-equal table {
   table-layout: fixed;
+  display: table;
+  overflow-x: visible;
 }
 
 .vp-doc .cols-equal th,
 .vp-doc .cols-equal td {
   text-align: left;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ============ 访问统计 ============ */
