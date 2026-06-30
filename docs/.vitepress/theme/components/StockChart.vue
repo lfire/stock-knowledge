@@ -60,6 +60,12 @@ const props = withDefaults(
     overlays?: Overlay[]
     zoom?: boolean
     theme?: 'auto' | 'dark' | 'light'
+    // 可见 K 线根数：传入后等效于"滚轮放大到只显示 N 根 K 线"。
+    // 不传则使用 klinecharts 默认自适应。
+    visibleBars?: number
+    // 在指定 K 线下方强制显示文字标签（绕开 klinecharts X 轴 tick 稀疏算法）。
+    // 适用于"图例/教学"场景里，确保每根真实 K 都有标签。
+    bottomLabels?: { dataIndex: number; text: string }[]
   }>(),
   {
     type: 'candle',
@@ -75,7 +81,7 @@ let io: IntersectionObserver | null = null
 let ro: ResizeObserver | null = null
 let mo: MutationObserver | null = null
 
-// ===== KLineChart 全站共享加载器 + 一次性自定义指标注册 =====
+// ===== KLineChart 全站共享加载器 + 一次性自定义指标 / overlay 注册 =====
 let klcPromise: Promise<any> | null = null
 let customRegistered = false
 
@@ -84,12 +90,51 @@ function loadKLC() {
     klcPromise = import('klinecharts').then((mod) => {
       if (!customRegistered) {
         registerCustomIndicators(mod)
+        registerCustomOverlays(mod)
         customRegistered = true
       }
       return mod
     })
   }
   return klcPromise
+}
+
+// ===== 自定义 overlay：在指定 K 线下方画文字标签 =====
+// 用法：inst.createOverlay({ name: 'bottomLabel', points: [{ dataIndex }], extendData: '阳线 ▲' })
+function registerCustomOverlays(mod: any) {
+  const { registerOverlay } = mod
+  registerOverlay({
+    name: 'bottomLabel',
+    totalStep: 2,
+    needDefaultPointFigure: false,
+    needDefaultXAxisFigure: false,
+    needDefaultYAxisFigure: false,
+    createPointFigures: ({ overlay, coordinates, bounding }: any) => {
+      const text = overlay.extendData ?? ''
+      if (!coordinates?.[0] || !text) return []
+      const x = coordinates[0].x
+      // 画在主图底部下方 8px 处（bounding.height 是当前 pane 高度）
+      const y = (bounding?.height ?? 200) - 6
+      return [
+        {
+          type: 'text',
+          attrs: {
+            x,
+            y,
+            text,
+            align: 'center',
+            baseline: 'bottom'
+          },
+          styles: {
+            color: '#c8ccd1',
+            size: 12,
+            family: 'inherit'
+          },
+          ignoreEvent: true
+        }
+      ]
+    }
+  })
 }
 
 // ===== 行情主题（A 股红涨绿跌）=====
@@ -384,7 +429,22 @@ async function render() {
 
   applyAll(mod)
 
-  ro = new ResizeObserver(() => chart.value && chart.value.resize())
+  ro = new ResizeObserver(() => {
+    if (!chart.value) return
+    chart.value.resize()
+    // 容器尺寸变化时，按 visibleBars 重算 barSpace + 居中偏移
+    if (props.visibleBars && props.visibleBars > 0 && props.type !== 'minute') {
+      const yAxisW = 56
+      const w = root.value?.clientWidth ?? 600
+      const chartW = w - yAxisW
+      const bar = Math.max(2, Math.min(50, chartW / props.visibleBars))
+      try { chart.value.setBarSpace(bar) } catch {}
+      const dataLen = toKlineList().length
+      const usedW = dataLen * bar
+      const rightOffset = Math.max(6, Math.round((chartW - usedW) / 2))
+      try { chart.value.setOffsetRightDistance(rightOffset) } catch {}
+    }
+  })
   ro.observe(root.value)
 
   if (typeof MutationObserver !== 'undefined' && props.theme === 'auto') {
@@ -544,6 +604,44 @@ function applyAll(mod: any) {
   // ---- 缩放开关 ----
   inst.setOffsetRightDistance(props.zoom ? 30 : 6)
   inst.setMaxOffsetLeftDistance(props.zoom ? 100 : 0)
+
+  // ---- 可见 K 线根数：等效于"滚轮放大到 N 根 K 线"----
+  // 关键点：klinecharts 内部 BarSpaceLimitConstants.MAX = 50px，超过会被拒绝，
+  // 所以理想 barSpace 必须 clamp 到 [1, 50]。
+  // 当数据条数 < visibleBars 时，K 线会靠右贴 Y 轴，再通过 setOffsetRightDistance
+  // 把右侧推开，使真实 K 线在画布中**水平居中**。
+  if (props.visibleBars && props.visibleBars > 0 && props.type !== 'minute') {
+    const yAxisW = 56
+    const containerW = root.value?.clientWidth ?? 600
+    const chartW = containerW - yAxisW
+    // 理想宽度
+    const ideal = chartW / props.visibleBars
+    // 受 klinecharts 限制：bar 最大 50
+    const bar = Math.max(2, Math.min(50, ideal))
+    try {
+      inst.setBarSpace(bar)
+    } catch {}
+    // 数据条数（真实 + 空 K）
+    const dataLen = toKlineList().length
+    // 实际数据占据的宽度
+    const usedW = dataLen * bar
+    // 居中：右侧偏移 = (绘图区宽 - 数据宽) / 2
+    const rightOffset = Math.max(6, Math.round((chartW - usedW) / 2))
+    inst.setOffsetRightDistance(rightOffset)
+  }
+
+  // ---- 底部强制标签：在指定 K 线下方画文字，绕开 X 轴 tick 稀疏算法 ----
+  if (props.bottomLabels?.length) {
+    for (const lb of props.bottomLabels) {
+      // value 取一个绝对低位（用 1e-9 避免被裁掉），让 overlay 点落在底部
+      inst.createOverlay({
+        name: 'bottomLabel',
+        lock: true,
+        points: [{ dataIndex: lb.dataIndex, value: 0 }],
+        extendData: lb.text
+      })
+    }
+  }
 }
 
 function normalizeMAPeriods(ma: any): number[] {
