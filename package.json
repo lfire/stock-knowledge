@@ -17,6 +17,9 @@
     "vitepress"
   ],
   "license": "MIT",
+  "dependencies": {
+    "klinecharts": "^9.8.10"
+  },
   "devDependencies": {
     "vitepress": "^1.6.3"
   }

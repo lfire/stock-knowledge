@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      klinecharts:
+        specifier: ^9.8.10
+        version: 9.8.12
     devDependencies:
       vitepress:
         specifier: ^1.6.3
@@ -619,6 +623,10 @@ packages:
   is-what@5.5.0:
     resolution: {integrity: sha512-oG7cgbmg5kLYae2N5IVd3jm2s+vldjxJzK1pcu9LfpGuQ93MQSzo0okvRna+7y5ifrD+20FE8FvjusyGaz14fw==}
     engines: {node: '>=18'}
+
+  klinecharts@9.8.12:
+    resolution: {integrity: sha512-yKLWMliwwIsiQsAI8geNOkE8P6SFsvaa0leX2isgB4Y1SvM3tS6Y9pe7ZbKkiLtOE0P0W9W9wb0M2wH0xAPG7w==}
+    engines: {node: '>=0.10.0'}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -1369,6 +1377,8 @@ snapshots:
   html-void-elements@3.0.0: {}
 
   is-what@5.5.0: {}
+
+  klinecharts@9.8.12: {}
 
   magic-string@0.30.21:
     dependencies:

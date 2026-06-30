@@ -6,6 +6,7 @@ import Comments from './components/Comments.vue'
 import DocStats from './components/DocStats.vue'
 import SiteStats from './components/SiteStats.vue'
 import PostMeta from './components/PostMeta.vue'
+import StockChart from './components/StockChart.vue'
 import './style.css'
 
 export default {
@@ -25,5 +26,7 @@ export default {
   enhanceApp({ app }) {
     // 注册全局组件，供 Markdown 中直接使用 <BlogList />
     app.component('BlogList', BlogList)
+    // K 线 / 趋势图表组件，供形态分析文章使用 <StockChart />
+    app.component('StockChart', StockChart)
   }
 } satisfies Theme

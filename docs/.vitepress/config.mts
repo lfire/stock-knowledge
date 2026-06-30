@@ -46,6 +46,7 @@ export default defineConfig({
           text: '分析方法',
           items: [
             { text: '技术分析入门', link: '/analysis/technical-analysis' },
+            { text: 'K 线形态大全（103 种）', link: '/analysis/kline-patterns' },
             { text: '基本面分析', link: '/analysis/fundamental-analysis' },
             { text: '常用技术指标', link: '/analysis/indicators' }
           ]

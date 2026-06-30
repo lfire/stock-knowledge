@@ -180,6 +180,31 @@
   border-radius: 8px;
 }
 
+/* ============ 文章表格：占满宽度 + 列宽优化 ============ */
+/* 默认：表格占满正文宽度，列宽按内容自适应（适用于表头不同的表格） */
+.vp-doc table {
+  display: table;
+  width: 100%;
+  table-layout: auto;
+  margin: 18px 0;
+}
+
+.vp-doc th,
+.vp-doc td {
+  /* 中文 / 长内容自动换行，避免撑破布局 */
+  word-break: break-word;
+}
+
+/* 表头为相同项的网格表（如形态目录）：各列等宽 */
+.vp-doc .cols-equal table {
+  table-layout: fixed;
+}
+
+.vp-doc .cols-equal th,
+.vp-doc .cols-equal td {
+  text-align: left;
+}
+
 /* ============ 访问统计 ============ */
 .doc-stats {
   font-size: 13px;
